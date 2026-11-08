@@ -7,6 +7,7 @@ import subprocess
 import os
 import urllib.request
 import json
+import re
 
 ver_list_url = "https://piston-meta.mojang.com/mc/game/version_manifest.json"
 ver_list_request = urllib.request.urlopen(ver_list_url)
@@ -18,6 +19,7 @@ data = json.loads(json_string)
 
 #creating a version list
 versions_list = data["versions"]
+
 
 def download_progress(block_num, block_size, total_size):
     if total_size > 0:
@@ -91,6 +93,17 @@ def click():
           with open("eula.txt","w") as f:
             f.write(newline)
 
+          if flag_crack.get() == 1:
+            with open("server.properties", "r") as file_in:
+              content = file_in.read()
+
+            new_content_online_mode = re.sub(r"online-mode\s*=\s*(true|True)", "online-mode=false", content)
+            new_content_white_list = re.sub(r"white-lists*=\s*(true|True)", "white-list=false", new_content_online_mode)
+
+            with open("server.properties", "w") as file_out:
+              file_out.write(new_content_white_list)
+        
+
           ram = f"-Xmx{int(slider.get())}g"
           print(ram)
 
@@ -124,14 +137,14 @@ avainable_versions = [ver["id"] for ver in versions_list]
 # Creation of the window
 root = TkinterDnD.Tk()
 root.title("Server Generator")
-root.geometry("400x450")
+root.geometry("400x550")
 
 # --- SELECTIONG VERSION ---
 label_version = tk.Label(root, text="Version:", font=("Arial", 14), anchor="w")
 label_version.pack(anchor="w", pady=10 , padx=5)
 
 combo_version = ttk.Combobox(root, values=avainable_versions, state="readonly")
-combo_version.pack(anchor="w", fill="x", padx=40, pady=5)
+combo_version.pack(anchor="w", fill="x" ,padx=40, pady=5)
 
 # --- SELECTIONG NAME ---
 label_name = tk.Label(root, text="Name:", font=("Arial", 14), anchor="w")
@@ -152,13 +165,20 @@ entry_path.pack(pady=10)
 ram_path = tk.Label(root, text="Ram assigned:", font=("Arial", 14))
 ram_path.pack(anchor="w", pady=10 , padx=5)
 
-slider = tk.Scale(root, from_=1, to=8, length=200, orient=tk.HORIZONTAL)
+slider = tk.Scale(root, from_=1, to=8, length=370, orient=tk.HORIZONTAL)
 slider.pack()
+
 
 
 # REGISTERING THE INPUT AS AN AVAILABLE PATH DROP
 entry_path.drop_target_register(DND_FILES)
 entry_path.dnd_bind("<<Drop>>", gestisci_rilascio)
+
+# --- SLECTIONING CRACK LAUNCHER ---
+flag_crack = tk.IntVar()
+checkbox = tk.Checkbutton(root, text='3rd Party Launcher',variable=flag_crack, onvalue=1, offvalue=0)
+checkbox.pack(pady=10)
+
 
 progress = ttk.Progressbar(root, orient="horizontal", length=300 , mode="determinate")
 progress.pack(pady=10)
